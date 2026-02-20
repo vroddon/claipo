@@ -5,6 +5,9 @@ import java.awt.*;
 import java.awt.datatransfer.*;
 import java.awt.event.ActionEvent;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class Agent {
 
@@ -61,7 +64,8 @@ public class Agent {
     }
 
     private void onGenerate(ActionEvent e) {
-        String text = readClipboardText();
+//        String text = readClipboardText();
+        String text = readEmailJson();
         if (text == null || text.trim().isEmpty()) {
             beep("Clipboard is empty or not text.");
             return;
@@ -70,7 +74,7 @@ public class Agent {
         // Build prompt; must be final for usage inside SwingWorker
         final String base =
                 "You are Victor and you have to answer this email thread. " +
-                "Be concise, not too formal. ";
+                "Be concise, not too formal. Write only the body text, nothing else.";
         final String hint = txtHint.getText().trim();
         final String prompt = hint.isEmpty()
                 ? base
@@ -139,6 +143,18 @@ public class Agent {
         JOptionPane.showMessageDialog(frame, msg, "claipo", JOptionPane.WARNING_MESSAGE);
     }
 
+    public static String readEmailJson() {
+        String s ="";
+        try{
+            Path path = Path.of("D:\\svn\\victor\\claipo\\email.json");
+            s=Files.readString(path, StandardCharsets.UTF_8);
+        }catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+            return s;
+        }
+    
     private static String readClipboardText() {
         Clipboard cb = Toolkit.getDefaultToolkit().getSystemClipboard();
         try {
