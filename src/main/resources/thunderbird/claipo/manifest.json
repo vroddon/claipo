@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "Claipo",
+  "version": "1.0",
+  "description": "Calls local Claipo server",
+
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "claipo@local"
+    }
+  },
+
+  "permissions": [
+    "compose"
+  ],
+
+  "host_permissions": [
+    "http://localhost/*"
+  ],
+
+  "icons": {
+    "32": "icon.png"
+  },
+
+  "compose_action": {
+    "default_title": "Claipo",
+    "default_icon": "icon.png"
+  },
+
+  "background": {
+    "scripts": ["background.js"]
+  }
+}

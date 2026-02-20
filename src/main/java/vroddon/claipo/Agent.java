@@ -74,7 +74,7 @@ public class Agent {
         // Build prompt; must be final for usage inside SwingWorker
         final String base =
                 "You are Victor and you have to answer this email thread. " +
-                "Be concise, not too formal. Write only the body text, nothing else.";
+                "Be concise, not too formal. Write only the body text, nothing else .";
         final String hint = txtHint.getText().trim();
         final String prompt = hint.isEmpty()
                 ? base
