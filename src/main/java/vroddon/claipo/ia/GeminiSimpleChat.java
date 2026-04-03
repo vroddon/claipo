@@ -1,4 +1,4 @@
-package vroddon.claipo;
+package vroddon.claipo.ia;
 
 import java.io.FileInputStream;
 import java.util.List;

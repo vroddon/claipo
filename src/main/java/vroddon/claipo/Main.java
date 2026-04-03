@@ -3,12 +3,15 @@ package vroddon.claipo;
 
 import javax.swing.SwingUtilities;
 
+/**    
+ * Launches the claipo
+*/
 public class Main {
     public static void main(String[] args) {
         // Start UI on EDT
         System.out.println("Claipo. Java : " + Runtime.version());
         SwingUtilities.invokeLater(() -> {
-            Agent agent = new Agent();
+            ClaipoUI agent = new ClaipoUI();
             agent.showUI();
         });
     }

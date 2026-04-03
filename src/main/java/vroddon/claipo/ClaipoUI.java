@@ -1,15 +1,16 @@
 package vroddon.claipo;
 
+import vroddon.claipo.ia.GeminiSimpleChat;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.*;
 import java.awt.event.ActionEvent;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import vroddon.claipo.agenda.AgenteAgenda;
+import vroddon.claipo.agenda.AgenteCorreo;
+import vroddon.claipo.util.Util;
 
-public class Agent {
+public class ClaipoUI {
 
     private final JFrame frame;
     private final JButton btnGenerate;
@@ -17,7 +18,7 @@ public class Agent {
 
     private final GeminiSimpleChat chat;
 
-    public Agent() {
+    public ClaipoUI() {
         this.chat = new GeminiSimpleChat();
 
         // Normal, movable window; keep always-on-top if you like it
@@ -40,7 +41,7 @@ public class Agent {
         btnGenerate.setMargin(new Insets(2, 6, 2, 6)); // keep it small
         btnGenerate.setFocusPainted(false);
         btnGenerate.setToolTipText("Generate reply and copy to clipboard");
-        btnGenerate.addActionListener(this::onGenerate);
+        btnGenerate.addActionListener(this::onClick);
 
         content.add(txtHint, BorderLayout.CENTER);
         content.add(btnGenerate, BorderLayout.EAST);
@@ -63,39 +64,41 @@ public class Agent {
         frame.setVisible(true);
     }
 
-    private void onGenerate(ActionEvent e) {
-//        String text = readClipboardText();
-        String text = readEmailJson();
-        if (text == null || text.trim().isEmpty()) {
-            beep("Clipboard is empty or not text.");
-            return;
-        }
-
-        // Build prompt; must be final for usage inside SwingWorker
-        final String base =
-                "You are Victor and you have to answer this email thread. " +
-                "Be concise, not too formal. Write only the body text, nothing else .";
-        final String hint = txtHint.getText().trim();
-        final String prompt = hint.isEmpty()
-                ? base
-                : base + "The user added this hint: " + hint + ". ";
+    
+    private static String analiza(String orden)
+    {
+        if (orden.contains("@agenda"))
+            return "agenda";
+        return "correo";
+        
+    }
+    
+    private void onClick(ActionEvent e) {
+        
+       String hint = txtHint.getText().trim();
+       Util.logf("TU___: " + hint);
+//     String clipboard = readClipboardText();
 
         setBusy(true);
-
         SwingWorker<String, Void> worker = new SwingWorker<>() {
             @Override
             protected String doInBackground() throws Exception {
-                // NOTE: prompt is final (as requested)
-                return chat.chat(prompt + text);
+                String agente = analiza(hint);
+                String respuesta = "nada";
+                if (agente.equals("agenda"))
+                    respuesta = AgenteAgenda.chat(hint);
+                else
+                    respuesta = AgenteCorreo.chat(hint);
+                return respuesta;
             }
-
             @Override
             protected void done() {
                 try {
                     String reply = get();
                     if (reply != null && !reply.trim().isEmpty()) {
                         writeClipboardText(reply);
-                        tooltip("Copied ✓");
+                        Util.logf("IA___: " +reply);
+                        tooltip("Ready ✓");
                     } else {
                         beep("Empty model response.");
                     }
@@ -143,17 +146,6 @@ public class Agent {
         JOptionPane.showMessageDialog(frame, msg, "claipo", JOptionPane.WARNING_MESSAGE);
     }
 
-    public static String readEmailJson() {
-        String s ="";
-        try{
-            Path path = Path.of("D:\\svn\\victor\\claipo\\email.json");
-            s=Files.readString(path, StandardCharsets.UTF_8);
-        }catch(Exception e)
-        {
-            e.printStackTrace();
-        }
-            return s;
-        }
     
     private static String readClipboardText() {
         Clipboard cb = Toolkit.getDefaultToolkit().getSystemClipboard();

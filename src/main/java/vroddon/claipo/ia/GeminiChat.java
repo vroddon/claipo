@@ -1,4 +1,4 @@
-package vroddon.claipo;
+package vroddon.claipo.ia;
 
 import java.util.List;
 
@@ -26,11 +26,7 @@ public class GeminiChat {
 
     public static void main(String[] args) {
         try {
-
-
-
-
-String pregunta = "¿Cuáles son las fuentes de derecho? Quiero una única frase, breve si puede ser.";
+            String pregunta = "¿Cuáles son las fuentes de derecho? Quiero una única frase, breve si puede ser.";
             System.out.println("Consultando a Gemini...");
             String respuesta = new GeminiSimpleChat().chat(pregunta);
             System.out.println("\n--- RESPUESTA ---\n" + respuesta);
