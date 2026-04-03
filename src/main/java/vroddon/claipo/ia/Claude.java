@@ -7,9 +7,10 @@ import com.anthropic.models.messages.Message;
 import com.anthropic.models.messages.MessageCreateParams;
 import com.anthropic.models.messages.Model;
 import vroddon.claipo.util.Util;
-
+ 
 /**
  * Implementa la IA con Claude
+ * @author victor
  */
 public class Claude {
     public static void main(String[] args) {
