@@ -1,13 +1,10 @@
 package vroddon.claipo;
 
-import vroddon.claipo.ia.GeminiSimpleChat;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.*;
 import java.awt.event.ActionEvent;
 import java.io.IOException;
-import vroddon.claipo.agenda.AgenteAgenda;
-import vroddon.claipo.agenda.AgenteCorreo;
 import vroddon.claipo.util.Util;
 
 public class ClaipoUI {
@@ -15,11 +12,9 @@ public class ClaipoUI {
     private final JFrame frame;
     private final JButton btnGenerate;
     private final JTextField txtHint;
-
-    private final GeminiSimpleChat chat;
+    private final Orquestador orquestador = new Orquestador();
 
     public ClaipoUI() {
-        this.chat = new GeminiSimpleChat();
 
         // Normal, movable window; keep always-on-top if you like it
         frame = new JFrame("claipo");
@@ -63,15 +58,6 @@ public class ClaipoUI {
         } catch (Exception ignored) { }
         frame.setVisible(true);
     }
-
-    
-    private static String analiza(String orden)
-    {
-        if (orden.contains("@agenda"))
-            return "agenda";
-        return "correo";
-        
-    }
     
     private void onClick(ActionEvent e) {
         
@@ -83,12 +69,7 @@ public class ClaipoUI {
         SwingWorker<String, Void> worker = new SwingWorker<>() {
             @Override
             protected String doInBackground() throws Exception {
-                String agente = analiza(hint);
-                String respuesta = "nada";
-                if (agente.equals("agenda"))
-                    respuesta = AgenteAgenda.chat(hint);
-                else
-                    respuesta = AgenteCorreo.chat(hint);
+                String respuesta = orquestador.orquestar(hint);
                 return respuesta;
             }
             @Override

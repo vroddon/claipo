@@ -3,7 +3,7 @@ package vroddon.claipo.agenda;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import vroddon.claipo.ia.Claude;
+import vroddon.claipo.ia.ChatClaude;
 import vroddon.claipo.ia.GeminiSimpleChat;
 
 /**
@@ -23,7 +23,7 @@ public class AgenteCorreo  {
                 "Be concise, not too formal. Write only the body text, nothing else .";
 
         final String prompt = "The user added this hint: " + hint + ". END OF HINT. Email thread: ";
-        return Claude.chat(base + prompt + emails);
+        return new ChatClaude().chat(base + prompt + emails);
 
 //        return chat.chat(base + prompt + emails);
     }

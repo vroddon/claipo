@@ -1,10 +1,9 @@
-// src/main/java/vroddon/claipo/Main.java
 package vroddon.claipo;
 
 import javax.swing.SwingUtilities;
 
 /**    
- * Launches the claipo
+ * Launches the claipo UI
 */
 public class Main {
     public static void main(String[] args) {
