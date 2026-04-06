@@ -23,7 +23,7 @@ public class Agente {
     
 
     public static void main(String[] args) {
-        Agente agente = new Agente(new ChatClaude());
+        Agente agente = new Agente(new ChatGemma());
 //        agente.testMemoriaEnConversacion();
         agente.testMemoriaPermanente();
         if (true)
@@ -97,15 +97,19 @@ public class Agente {
                 boolean bfinished = chat.hasFinishedFromResponse(response);
                 if (bfinished)
                     break;
-                
-                ObjectNode assistantMsg = mapper.createObjectNode();
-                assistantMsg.put("role", "assistant");
-                assistantMsg.set("content", response.path("content"));
-                messages.add(assistantMsg);
-                
+
+                messages.add(chat.buildAssistantMessage(mapper, response));
+
                 AbstractMap.SimpleEntry<ObjectNode, String> ret = chat.invokeTools(response);
-                res+=ret.getValue();
-                messages.add(ret.getKey());
+                res += ret.getValue();
+                // ChatGemma devuelve un wrapper "tool_results" con múltiples mensajes;
+                // otros backends devuelven un único ObjectNode directamente.
+                ObjectNode toolMsg = ret.getKey();
+                if (toolMsg != null && toolMsg.has("tool_results")) {
+                    toolMsg.path("tool_results").forEach(messages::add);
+                } else if (toolMsg != null) {
+                    messages.add(toolMsg);
+                }
             }
 
         } catch (Exception e) {

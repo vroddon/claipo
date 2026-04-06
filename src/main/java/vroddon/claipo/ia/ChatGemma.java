@@ -138,6 +138,24 @@ public class ChatGemma extends Chat {
         return responseText;
     }
 
+    /** Convierte una tool de formato MCP/Anthropic al formato OpenAI que espera Ollama. */
+    private ObjectNode toOllamaTool(JsonNode mcpTool) {
+        ObjectNode function = mapper.createObjectNode();
+        function.put("name", mcpTool.path("name").asText());
+        function.put("description", mcpTool.path("description").asText());
+        // MCP usa "inputSchema", OpenAI/Ollama usa "parameters"
+        JsonNode schema = mcpTool.path("inputSchema");
+        if (schema.isMissingNode()) {
+            schema = mcpTool.path("parameters");
+        }
+        function.set("parameters", schema);
+
+        ObjectNode tool = mapper.createObjectNode();
+        tool.put("type", "function");
+        tool.set("function", function);
+        return tool;
+    }
+
     @Override
     public ObjectNode getJSONBodyWithTools(ArrayNode messages) {
         ObjectNode body = mapper.createObjectNode();
@@ -146,17 +164,15 @@ public class ChatGemma extends Chat {
         body.put("model", "gemma4");
         body.put("stream", false);
 
-        // Añadir las tools MCP disponibles para que Gemma sepa que puede llamarlas
+        // Añadir las tools en formato OpenAI (que es lo que Ollama espera),
+        // convirtiendo desde el formato MCP: { name, description, inputSchema }
+        // → { type:"function", function:{ name, description, parameters } }
         ArrayNode tools = mapper.createArrayNode();
         if (mcpFileSystem != null) {
-            for (JsonNode t : mcpFileSystem.getToolDescription2()) {
-                tools.add(t);
-            }
+            mcpFileSystem.getToolDescription2().forEach(t -> tools.add(toOllamaTool(t)));
         }
         if (mcpServerMemory != null) {
-            for (JsonNode t : mcpServerMemory.getToolDescription2()) {
-                tools.add(t);
-            }
+            mcpServerMemory.getToolDescription2().forEach(t -> tools.add(toOllamaTool(t)));
         }
         if (tools.size() > 0) {
             body.set("tools", tools);
@@ -167,14 +183,19 @@ public class ChatGemma extends Chat {
 
 @Override
 public boolean hasFinishedFromResponse(JsonNode response) {
-    String doneReason = response.path("done_reason").asText("");
-    if (doneReason.isEmpty()) {
-        return true;
-    }
-    if ("tool_call".equals(doneReason)) {
-        return false;   // aún no ha terminado, espera a que ejecutes la tool
+    // Ollama siempre devuelve done_reason="stop", incluso cuando hay tool_calls.
+    // La señal correcta es que message.tool_calls tenga contenido.
+    JsonNode toolCalls = response.path("message").path("tool_calls");
+    if (toolCalls.isArray() && toolCalls.size() > 0) {
+        return false;
     }
     return true;
+}
+
+@Override
+public ObjectNode buildAssistantMessage(ObjectMapper mapper, JsonNode response) {
+    // Ollama devuelve el mensaje del assistant en response.message, no en response.content
+    return (ObjectNode) response.path("message").deepCopy();
 }
 
 
@@ -209,10 +230,11 @@ public SimpleEntry<ObjectNode, String> invokeTools(JsonNode response) {
 
             String toolId = toolCall.path("id").asText();
             String toolName = toolCall.path("function").path("name").asText();
-            String rawArgs = toolCall.path("function").path("arguments").asText("{}");
-
-            // Los argumentos vienen como STRING → hay que parsearlos
-            ObjectNode args = (ObjectNode) mapper.readTree(rawArgs);
+            // En Ollama, arguments puede ser un objeto JSON ya parseado o un string serializado
+            JsonNode argsNode = toolCall.path("function").path("arguments");
+            ObjectNode args = argsNode.isObject()
+                    ? (ObjectNode) argsNode
+                    : (ObjectNode) mapper.readTree(argsNode.isMissingNode() ? "{}" : argsNode.asText());
 
             res.append("[MCP ").append(toolName).append("]\n");
 

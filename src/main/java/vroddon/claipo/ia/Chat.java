@@ -5,6 +5,7 @@
 package vroddon.claipo.ia;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.AbstractMap;
@@ -47,6 +48,17 @@ public class Chat {
     }
     public AbstractMap.SimpleEntry<ObjectNode, String> invokeTools(JsonNode response) {
         return new AbstractMap.SimpleEntry<>(null, "");
+    }
+
+    /**
+     * Builds the assistant message to append to the conversation history.
+     * Each Chat implementation may format the response differently.
+     */
+    public ObjectNode buildAssistantMessage(ObjectMapper mapper, JsonNode response) {
+        ObjectNode msg = mapper.createObjectNode();
+        msg.put("role", "assistant");
+        msg.set("content", response.path("content"));
+        return msg;
     }
 
     
