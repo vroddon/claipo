@@ -23,7 +23,7 @@ public class Agente {
     
 
     public static void main(String[] args) {
-        Agente agente = new Agente(new ChatGemma());
+        Agente agente = new Agente(new ChatClaude());
 //        agente.testMemoriaEnConversacion();
         agente.testMemoriaPermanente();
         if (true)
